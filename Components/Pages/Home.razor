@@ -1,0 +1,61 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Ants</PageTitle>
+
+<h1>Ants</h1>
+
+
+<FluentStack Orientation="Orientation.Horizontal" HorizontalGap="2">
+    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Play</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Pause</FluentButton>
+    <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
+    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Add Ant</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Remove Ant</FluentButton>
+    <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
+    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Save</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Load</FluentButton>
+    <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
+    <FluentTextField Placeholder="Placeholder"></FluentTextField>
+    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Update Movement</FluentButton>
+</FluentStack>
+
+<p></p>
+
+<canvas width="1000" height="1000" @ref="canvasElement"></canvas>
+
+<script>
+    window.exampleNamespace = {
+		initializeCanvas: function(canvas) {
+			const ctx = canvas.getContext('2d');
+			ctx.fillStyle = 'white';
+			ctx.fillRect(10, 10, 150, 150);
+		},
+		drawCanvas: function(canvas) {
+			const ctx = canvas.getContext('2d');
+			ctx.beginPath();
+            ctx.arc(Math.floor(Math.random() * (500 + 1)), Math.floor(Math.random() * (500 + 1)), 50, 0, Math.PI * 2, true); // Circle
+            ctx.fillStyle = 'yellow';
+			ctx.fill();
+		}
+	};
+</script>
+
+
+@code {
+    private ElementReference canvasElement;
+
+    private async void Draw()
+    {
+        await JSRuntime.InvokeVoidAsync("exampleNamespace.drawCanvas", canvasElement);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("exampleNamespace.initializeCanvas", canvasElement);
+        }
+    }
+}

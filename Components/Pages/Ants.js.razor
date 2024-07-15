@@ -1,0 +1,14 @@
+﻿window.exampleNamespace = {
+    initializeCanvas: function(canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'green';
+        ctx.fillRect(10, 10, 150, 150);
+    },
+    drawCanvas: function(canvas) {
+        const ctx = canvas.getContext('2d');
+        // Adicione aqui mais lógica de desenho conforme necessário
+        ctx.beginPath();
+        ctx.arc(75, 75, 50, 0, Math.PI * 2, true); // Círculo
+        ctx.fill();
+    }
+};
