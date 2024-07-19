@@ -1,5 +1,9 @@
 ﻿@page "/"
+@using LangtonsAnt
+@using System.Text.RegularExpressions
+@using UI
 @rendermode InteractiveServer
+@inject IDialogService DialogService
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Ants</PageTitle>
@@ -8,17 +12,30 @@
 
 
 <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="2">
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Play</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Pause</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnPlay_Click" IconStart="@(new Icons.Filled.Size20.Play())" Disabled="true" hidden="@(!btnPlayVisibility)">Play</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnPause_Click" IconStart="@(new Icons.Filled.Size20.Pause())" Disabled="true" hidden="@(!btnPauseVisibility)">Pause</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnStop_Click" IconStart="@(new Icons.Filled.Size20.Stop())" Disabled="true">Stop</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Add Ant</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Remove Ant</FluentButton>
+
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnPrev_Click" IconStart="@(new Icons.Filled.Size20.ArrowLeft())">Prev.</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnNext_Click" IconStart="@(new Icons.Filled.Size20.ArrowRight())">Next</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Save</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Load</FluentButton>
+
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditAnt_Click" IconStart="@(new Icons.Filled.Size20.Bug())">Ant</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditCellColor_Click" IconStart="@(new Icons.Filled.Size20.Color())">Cell Color</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
-    <FluentTextField Placeholder="Placeholder"></FluentTextField>
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Update Movement</FluentButton>
+
+    <FluentLabel Typo="Typography.H5">Rules:</FluentLabel>
+    <FluentTextField Disabled="true">@currentRule</FluentTextField>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditRuleStart_Click" IconStart="@(new Icons.Filled.Size20.Edit())">Edit</FluentButton>
+    <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
+
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnSave_Click" IconStart="@(new Icons.Filled.Size20.Save())">Save</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnLoad_Click" IconStart="@(new Icons.Filled.Size20.Folder())">Load</FluentButton>
+    <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
+
+    <FluentTextField Disabled="true">Step # @GenerationN</FluentTextField>
+
 </FluentStack>
 
 <p></p>
@@ -26,17 +43,17 @@
 <canvas width="1000" height="1000" @ref="canvasElement"></canvas>
 
 <script>
-    window.exampleNamespace = {
+    window.LangtonsAnt = {
 		initializeCanvas: function(canvas) {
 			const ctx = canvas.getContext('2d');
-			ctx.fillStyle = 'white';
-			ctx.fillRect(10, 10, 150, 150);
+			ctx.fillStyle = 'black';
+			ctx.fillRect(10, 10, 1500, 1500);
 		},
 		drawCanvas: function(canvas) {
 			const ctx = canvas.getContext('2d');
 			ctx.beginPath();
             ctx.arc(Math.floor(Math.random() * (500 + 1)), Math.floor(Math.random() * (500 + 1)), 50, 0, Math.PI * 2, true); // Circle
-            ctx.fillStyle = 'yellow';
+            ctx.fillStyle = 'red';
 			ctx.fill();
 		}
 	};
@@ -44,18 +61,371 @@
 
 
 @code {
+
+    GameBuffer buffer;
+    Timer gameTimer;
+    PlayUIMode playUiState;
+    EditUIMode editUiState;
+
+    string rule = "LR";
+    const int imagesPerSecond = 25;
+    const int nGenerations = 1000;
+    const int generationsPerStep = 1;
+
+    private string currentRule = string.Empty;
+    private string generationN = "0";
+    private bool btnPlayVisibility = true;
+    private bool btnPauseVisibility = true;
+
+
     private ElementReference canvasElement;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        buffer = CreateGameBuffer(null, nGenerations, rule);
+        buffer = CreateGameBuffer(null, nGenerations, rule);
+
+        // FRANK: SKIPPING THE TIMER STUFF FOR NOW DOING MANUAL ONLY
+
+        // gameTimer = new DispatcherTimer();
+        // gameTimer.Interval = TimeSpan.FromMilliseconds(1000 / imagesPerSecond);
+        // gameTimer.Tick += (sender, args) =>
+        // {
+        //     if (buffer.MoveNext(generationsPerStep))
+        //         UpdateGameView(buffer.Current!);
+        //     else
+        //     {
+        //         MessageBox.Show("Game Over. We no longer have any ants.");
+        //         PlayUIState = PlayUIMode.Stopped;
+        //     }
+        // };
+        currentRule = rule;
+        Rule = rule;
+        PlayUIState = PlayUIMode.Stopped;
+    }
+
+    private GameBuffer CreateGameBuffer(IGame? initialState = null, int nGenerations = 100, string initialRule = "LR")
+    {
+        if (initialState == null)
+        {
+            initialState = CreateGame(initialRule);
+        }
+        return new GameBuffer(initialState, nGenerations);
+    }
+
+    private IGame CreateGame(string initialRule = "LR")
+    {
+        IGame newGame = null;
+        newGame = new Game(128, null);
+        newGame.Ants = new List<IAnt>(new IAnt[] {
+                new GeneralizedAnt(i: newGame.Size / 2 + 1, j: newGame.Size / 2 + 1, direction: 0) { Rule = initialRule }
+    });
+        return newGame;
+    }
+
+
+
+    #region Properties
+
+    PlayUIMode PlayUIState
+    {
+        get { return playUiState; }
+        set
+        {
+            switch (value)
+            {
+                case PlayUIMode.Playing:
+                    // gameTimer.Start();
+                    btnPlayVisibility = false;
+                    btnPauseVisibility = true;
+                    break;
+                case PlayUIMode.Paused:
+                    // gameTimer.Stop();
+                    btnPauseVisibility = false;
+                    btnPlayVisibility = true;
+                    break;
+                case PlayUIMode.Stopped:
+                    // gameTimer.Stop();
+                    buffer = CreateGameBuffer(null, nGenerations, rule);
+                    // UpdateGameView(buffer.Current!);
+                    btnPlayVisibility = true;
+                    btnPauseVisibility = false;
+                    break;
+                default:
+                    break;
+            }
+            playUiState = value;
+        }
+    }
+
+    /// <summary>
+    /// This property switches UI between "Normal" or "Play" state and "Edit" states
+    /// </summary>
+    EditUIMode EditUIState
+    {
+        get { return editUiState; }
+        set
+        {
+            switch (value)
+            {
+                case EditUIMode.EditingColors:
+                    PlayUIState = PlayUIMode.Paused;
+                    // SetColorsEditMode(true);
+                    break;
+                case EditUIMode.EditingAnt:
+                    PlayUIState = PlayUIMode.Paused;
+                    // SetAntEditMode(true);
+                    break;
+                case EditUIMode.EditingRule:
+                    PlayUIState = PlayUIMode.Paused;
+                    // SetRuleEditMode(true);
+                    break;
+                case EditUIMode.NotEditing:
+                default:
+                    // SetRuleEditMode(false);
+                    // SetAntEditMode(false);
+                    // SetColorsEditMode(false);
+
+                    if (editUiState != EditUIMode.NotEditing)
+                    {
+                        buffer.FlushBuffer();
+                    }
+                    break;
+            }
+            editUiState = value;
+        }
+    }
+
+
+    /// <summary>
+    /// Switch UI into "rule edit" mode
+    /// </summary>
+    /// <param name="value">is on</param>
+    void SetRuleEditMode(bool value)
+    {
+        // Disable everything else
+        SetButtonsNonEditMode(!value);
+
+        if (value)
+        {
+            // pnlRuleText.Visibility = false;
+            // btnEditRuleStart.Visibility = false;
+            // txtEditRule.Visibility = true;
+            // btnEditRuleApply.Visibility = true;
+            // btnEditRuleCancel.Visibility = true;
+        }
+        else
+        {
+            // pnlRuleText.Visibility = true;
+            // btnEditRuleStart.Visibility = true;
+            // txtEditRule.Visibility = false;
+            // btnEditRuleApply.Visibility = false;
+            // btnEditRuleCancel.Visibility = false;
+        }
+    }
+
+    /// <summary>
+    /// Enable or disable buttons not related to editing
+    /// </summary>
+    /// <param name="value">Enable buttons</param>
+    void SetButtonsNonEditMode(bool value)
+    {
+        // Play - Stop - Pause
+        // btnPlay.IsEnabled = value;
+        // btnStop.IsEnabled = value;
+        // btnPause.IsEnabled = value;
+
+        // Previous and next buttons
+        // btnStepBackward.IsEnabled = value;
+        // btnStepForward.IsEnabled = value;
+
+        // Edit ants and colors
+        // btnEditAnt.IsEnabled = value;
+        // btnEditCellColor.IsEnabled = value;
+        // btnEditRuleStart.IsEnabled = value;
+
+        // Save and load
+        // btnSave.IsEnabled = value;
+        // btnLoad.IsEnabled = value;
+    }
+
+    /// <summary>
+    /// Switch UI into Ant edit mode
+    /// </summary>
+    /// <param name="value">is on</param>
+    void SetAntEditMode(bool value)
+    {
+        SetButtonsAntOrColorsEditMode(value);
+        // lblEditingAnts.Visibility = value ? true : false;
+    }
+
+    /// <summary>
+    /// Switch UI into Cell Colors edit mode
+    /// </summary>
+    /// <param name="value">is on</param>
+    void SetColorsEditMode(bool value)
+    {
+        SetButtonsAntOrColorsEditMode(value);
+        // lblEditingColors.Visibility = value ? true : false;
+    }
+
+    /// <summary>
+    /// Switch UI into Ant or cell colors edit mode
+    /// </summary>
+    /// <param name="value">is on</param>
+    void SetButtonsAntOrColorsEditMode(bool value)
+    {
+        SetButtonsNonEditMode(!value);
+
+        if (value)
+        {
+            // btnEditAnt.Visibility = false;
+            // btnEditCellColor.Visibility = false;
+            // btnBackToGame.Visibility = true;
+        }
+        else
+        {
+            // btnEditAnt.Visibility = true;
+            // btnEditCellColor.Visibility = true;
+            // btnBackToGame.Visibility = false;
+        }
+    }
+
+    /// <summary>
+    /// Set current ants rule string updating UI in the process
+    /// </summary>
+    public string Rule
+    {
+        get
+        {
+            return rule;
+        }
+        set
+        {
+            if (buffer.Current == null)
+                throw new InvalidOperationException("Cannot set ants rule when current game state is null");
+
+            if (!IsRuleValid(value))
+                throw new InvalidOperationException("The rule can only consist from L and R characters and be from 2 to 14 in length. Example: LLRR");
+
+            foreach (Ant a in buffer.Current.Ants)
+            {
+                ((GeneralizedAnt)a).Rule = value;
+            }
+            buffer.FlushBuffer();
+
+            SetRuleText(value);
+            rule = value;
+        }
+    }
+
+    private bool IsRuleValid(string proposedRule)
+    {
+        return Regex.IsMatch(proposedRule, "^[L|R]{2,14}$");
+    }
+
+    private void SetRuleText(string rule)
+    {
+        // List<TextBlock> tbs = CreateColoredRuleControls(rule);
+        // pnlRuleText.Children.Clear();
+        // foreach (TextBlock tb in tbs)
+        // {
+        //     pnlRuleText.Children.Add(tb);
+        // }
+    }
+
+    public int MaxColor
+    {
+        get { return (rule?.Length ?? 0) - 1; }
+    }
+
+    #endregion
+
+    #region Event Handlers
+
+    private void btnPlay_Click()
+    {
+        PlayUIState = PlayUIMode.Playing;
+    }
+
+    private void btnPause_Click()
+    {
+        PlayUIState = PlayUIMode.Paused;
+    }
+
+    private void btnStop_Click()
+    {
+        PlayUIState = PlayUIMode.Stopped;
+    }
+
+    private async Task btnPrev_Click(MouseEventArgs e)
+    {
+        PlayUIState = PlayUIMode.Paused;
+
+        if (!buffer.MovePrevious())
+        {
+            DialogService.ShowInfo($"Cannot move back. We only store a limited number of previous generations of the game.");
+        }
+        //UpdateGameView(buffer.Current!);
+    }
+    private async Task btnNext_Click(MouseEventArgs e)
+    {
+        PlayUIState = PlayUIMode.Paused;
+
+        if (!buffer.MoveNext())
+        { 
+            DialogService.ShowInfo("Game Over. We no longer have any ants.");
+        }
+        //UpdateGameView(buffer.Current!);
+    }
+    private void btnEditAnt_Click(MouseEventArgs e)
+    {
+        EditUIState = EditUIMode.EditingAnt;
+    }
+    private void btnEditCellColor_Click(MouseEventArgs e)
+    {
+        EditUIState = EditUIMode.EditingColors;
+    }
+    private void btnEditRuleStart_Click(MouseEventArgs e)
+    {
+        EditUIState = EditUIMode.EditingRule;
+    }
+    private async Task btnSave_Click(MouseEventArgs e)
+    {
+        DialogService.ShowInfo("One Day we will save.");
+    }
+    private async Task btnLoad_Click(MouseEventArgs e)
+    {
+        DialogService.ShowInfo("One Day we will Load.");
+    }
+
+    #endregion
+
+    #region JS - UI
+
+    private void UpdateGameView(IGame gameState)
+    {
+        //ImageSource source;
+        //source = GameImageRenderer.GetGenerationImageSourceX2(gameState);
+        //imgGame.Source = source;
+
+        generationN = gameState.GenerationN.ToString();
+    }
 
     private async void Draw()
     {
-        await JSRuntime.InvokeVoidAsync("exampleNamespace.drawCanvas", canvasElement);
+        await JSRuntime.InvokeVoidAsync("LangtonsAnt.drawCanvas", canvasElement);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await JSRuntime.InvokeVoidAsync("exampleNamespace.initializeCanvas", canvasElement);
+            await JSRuntime.InvokeVoidAsync("LangtonsAnt.initializeCanvas", canvasElement);
         }
     }
+
+    #endregion
+
 }
