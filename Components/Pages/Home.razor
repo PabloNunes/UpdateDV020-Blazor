@@ -6,10 +6,9 @@
 
 <h1>Ants</h1>
 
-
 <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="2">
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Play</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Pause</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="Play">Play</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="Pause">Pause</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
     <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Add Ant</FluentButton>
     <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Remove Ant</FluentButton>
@@ -25,23 +24,71 @@
 
 <canvas width="1000" height="1000" @ref="canvasElement"></canvas>
 
-<script>
-    window.exampleNamespace = {
-		initializeCanvas: function(canvas) {
-			const ctx = canvas.getContext('2d');
-			ctx.fillStyle = 'white';
-			ctx.fillRect(10, 10, 150, 150);
-		},
-		drawCanvas: function(canvas) {
-			const ctx = canvas.getContext('2d');
-			ctx.beginPath();
-            ctx.arc(Math.floor(Math.random() * (500 + 1)), Math.floor(Math.random() * (500 + 1)), 50, 0, Math.PI * 2, true); // Circle
-            ctx.fillStyle = 'yellow';
-			ctx.fill();
-		}
-	};
-</script>
+@code {
+    private List<Ant> lstAnts = new List<Ant>();
+    private bool IsPlaying = false;
+    private Random random = new Random();
 
+    protected override void OnInitialized()
+    {
+        // Initialize ants
+        for (int i = 0; i < 10; i++)
+        {
+            lstAnts.Add(new Ant { X = 400, Y = 300 });
+        }
+    }
+
+    private void Play()
+    {
+        IsPlaying = true;
+    }
+
+    private void Pause()
+    {
+        IsPlaying = false;
+    }
+
+    private void UpdateAnts(object state)
+    {
+        if (IsPlaying)
+        {
+            foreach (var ant in lstAnts)
+            {
+                // Move ant in a random direction
+                ant.X += random.Next(-1, 2); // Move left, stay, or move right
+                ant.Y += random.Next(-1, 2); // Move up, stay, or move down
+            }
+            StateHasChanged(); // Trigger UI update
+        }
+    }
+
+    // Define the Ant class within the same file
+    public class Ant
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+    }
+}
+
+<script>
+    ﻿window.exampleNamespace = {
+    function initializeCanvas(canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'green';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    },
+    function drawCanvas(canvas, x, y, length, angle) {
+        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+			ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + length * Math.cos(angle), y + length * Math.sin(angle));
+            ctx.stroke();
+    }
+};
+</script>
 
 @code {
     private ElementReference canvasElement;
