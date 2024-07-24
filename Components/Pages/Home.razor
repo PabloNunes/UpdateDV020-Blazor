@@ -8,54 +8,65 @@
 
 
 <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="2">
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Play</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Pause</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="DrawGrid">Play</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="NullFunction">Pause</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Add Ant</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Remove Ant</FluentButton>
-    <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Save</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Load</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="ToggleClickEvent">Edit Ant</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="ToggleClickEvent">Edit Cell Color</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="NullFunction">Remove Ant</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
     <FluentTextField Placeholder="Placeholder"></FluentTextField>
-    <FluentButton Appearance="Appearance.Accent" @onclick="Draw">Update Movement</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="NullFunction">Update Movement</FluentButton>
+    <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
+    <FluentLabel Typo="Typography.H3">Iterations: @statusMessage</FluentLabel>
 </FluentStack>
 
 <p></p>
+<script src="mainPage.js"></script>
 
-<canvas width="1000" height="1000" @ref="canvasElement"></canvas>
 
-<script>
-    window.exampleNamespace = {
-		initializeCanvas: function(canvas) {
-			const ctx = canvas.getContext('2d');
-			ctx.fillStyle = 'white';
-			ctx.fillRect(10, 10, 150, 150);
-		},
-		drawCanvas: function(canvas) {
-			const ctx = canvas.getContext('2d');
-			ctx.beginPath();
-            ctx.arc(Math.floor(Math.random() * (500 + 1)), Math.floor(Math.random() * (500 + 1)), 50, 0, Math.PI * 2, true); // Circle
-            ctx.fillStyle = 'yellow';
-			ctx.fill();
-		}
-	};
-</script>
-
+<canvas width="2000" height="750" @ref="canvasElement"></canvas>
 
 @code {
     private ElementReference canvasElement;
+    private bool isClickEventEnabled = false;
+    private string statusMessage = "Status: Ready";
 
-    private async void Draw()
+    private async void NullFunction(){}
+
+    private async void DrawGrid()
     {
-        await JSRuntime.InvokeVoidAsync("exampleNamespace.drawCanvas", canvasElement);
+        int rows = 200; 
+        int cols = 75; 
+        int cellSize = 10;
+        await JSRuntime.InvokeVoidAsync("mainPage.drawGrid", canvasElement, rows, cols, cellSize);
+        await JSRuntime.InvokeVoidAsync("mainPage.addClickEventListener", canvasElement, cellSize);
+    }
+
+    private async void ToggleClickEvent()
+    {
+        int cellSize = 10;
+        if (isClickEventEnabled)
+        {
+            await JSRuntime.InvokeVoidAsync("mainPage.removeClickEventListener", canvasElement);
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("mainPage.addClickEventListener", canvasElement, cellSize);
+        }
+        isClickEventEnabled = !isClickEventEnabled;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await JSRuntime.InvokeVoidAsync("exampleNamespace.initializeCanvas", canvasElement);
+            await JSRuntime.InvokeVoidAsync("mainPage.initializeCanvas", canvasElement);
         }
+    }
+
+    private void UpdateStatusMessage()
+    {
+        statusMessage = $"Status: Click";
     }
 }
