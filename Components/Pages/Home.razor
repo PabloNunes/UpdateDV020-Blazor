@@ -26,7 +26,7 @@
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
     <FluentLabel Typo="Typography.H5">Rules:</FluentLabel>
-    <FluentTextField Disabled="true">@currentRule</FluentTextField>
+    <FluentTextField Value="@currentRule" ReadOnly="true"></FluentTextField>
     <FluentButton Appearance="Appearance.Accent" @onclick="btnEditRuleStart_Click" IconStart="@(new Icons.Filled.Size20.Edit())">Edit</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
@@ -34,28 +34,51 @@
     <FluentButton Appearance="Appearance.Accent" @onclick="btnLoad_Click" IconStart="@(new Icons.Filled.Size20.Folder())">Load</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
-    <FluentTextField Disabled="true">Step # @GenerationN</FluentTextField>
+    <FluentTextField Value="@generationN" ReadOnly="true"></FluentTextField>
 
 </FluentStack>
 
 <p></p>
 
-<canvas width="1000" height="1000" @ref="canvasElement"></canvas>
+<canvas id="anthill" width="500" height="500" @ref="canvasElement"></canvas>
 
 <script>
+
     window.LangtonsAnt = {
 		initializeCanvas: function(canvas) {
-			const ctx = canvas.getContext('2d');
-			ctx.fillStyle = 'black';
-			ctx.fillRect(10, 10, 1500, 1500);
+			let ctx = canvas.getContext('2d');
+            ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#Ece7d7';
+            ctx.fillRect(10, 10, 500, 500);
 		},
 		drawCanvas: function(canvas) {
-			const ctx = canvas.getContext('2d');
+            let ctx = canvas.getContext('2d');
 			ctx.beginPath();
             ctx.arc(Math.floor(Math.random() * (500 + 1)), Math.floor(Math.random() * (500 + 1)), 50, 0, Math.PI * 2, true); // Circle
             ctx.fillStyle = 'red';
 			ctx.fill();
-		}
+		},
+
+        clearCanvas: function (canvas) { 
+            let ctx = canvas.getContext('2d');
+            ctx.clearRect(10, 10, canvas.width, canvas.height);
+        },
+
+        drawPixel: function (canvas, posX, posY, width, height, color) {
+            let ctx = canvas.getContext('2d');
+            let cubeSize = 20;
+
+            // just to debug
+            //ctx.globalAlpha = 0.25
+
+            posX = posX * cubeSize;
+            posY = posY * cubeSize;
+            width = width * cubeSize;
+            height = height * cubeSize;
+
+            ctx.fillStyle = color;
+            ctx.fillRect(posX, posY, width, height);
+        }
 	};
 </script>
 
@@ -69,41 +92,42 @@
 
     string rule = "LR";
     const int imagesPerSecond = 25;
-    const int nGenerations = 1000;
+    const int nGenerations = 100;
     const int generationsPerStep = 1;
 
     private string currentRule = string.Empty;
-    private string generationN = "0";
+    private string generationN = "Step #0";
     private bool btnPlayVisibility = true;
     private bool btnPauseVisibility = true;
 
 
     private ElementReference canvasElement;
 
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        buffer = CreateGameBuffer(null, nGenerations, rule);
-        buffer = CreateGameBuffer(null, nGenerations, rule);
+    //protected override async Task OnInitializedAsync()
+    // protected override  void OnInitialized()
+    // {
+    //     base.OnInitialized();
+    //     buffer = CreateGameBuffer(null, nGenerations, rule);
+    //     //buffer = CreateGameBuffer(null, nGenerations, rule);
 
-        // FRANK: SKIPPING THE TIMER STUFF FOR NOW DOING MANUAL ONLY
+    //     // FRANK: SKIPPING THE TIMER STUFF FOR NOW DOING MANUAL ONLY
 
-        // gameTimer = new DispatcherTimer();
-        // gameTimer.Interval = TimeSpan.FromMilliseconds(1000 / imagesPerSecond);
-        // gameTimer.Tick += (sender, args) =>
-        // {
-        //     if (buffer.MoveNext(generationsPerStep))
-        //         UpdateGameView(buffer.Current!);
-        //     else
-        //     {
-        //         MessageBox.Show("Game Over. We no longer have any ants.");
-        //         PlayUIState = PlayUIMode.Stopped;
-        //     }
-        // };
-        currentRule = rule;
-        Rule = rule;
-        PlayUIState = PlayUIMode.Stopped;
-    }
+    //     // gameTimer = new DispatcherTimer();
+    //     // gameTimer.Interval = TimeSpan.FromMilliseconds(1000 / imagesPerSecond);
+    //     // gameTimer.Tick += (sender, args) =>
+    //     // {
+    //     //     if (buffer.MoveNext(generationsPerStep))
+    //     //         UpdateGameView(buffer.Current!);
+    //     //     else
+    //     //     {
+    //     //         MessageBox.Show("Game Over. We no longer have any ants.");
+    //     //         PlayUIState = PlayUIMode.Stopped;
+    //     //     }
+    //     // };
+    //     currentRule = rule;
+    //     Rule = rule;
+    //     PlayUIState = PlayUIMode.Stopped;
+    // }
 
     private GameBuffer CreateGameBuffer(IGame? initialState = null, int nGenerations = 100, string initialRule = "LR")
     {
@@ -117,10 +141,14 @@
     private IGame CreateGame(string initialRule = "LR")
     {
         IGame newGame = null;
-        newGame = new Game(128, null);
+        //newGame = new Game(128, null);
+        newGame = new Game(20, null);
         newGame.Ants = new List<IAnt>(new IAnt[] {
-                new GeneralizedAnt(i: newGame.Size / 2 + 1, j: newGame.Size / 2 + 1, direction: 0) { Rule = initialRule }
-    });
+                            new GeneralizedAnt(
+                                i: newGame.Size / 2 + 1, 
+                                j: newGame.Size / 2 + 1, 
+                                direction: 0) { Rule = initialRule }
+                        });
         return newGame;
     }
 
@@ -148,7 +176,7 @@
                 case PlayUIMode.Stopped:
                     // gameTimer.Stop();
                     buffer = CreateGameBuffer(null, nGenerations, rule);
-                    // UpdateGameView(buffer.Current!);
+                    UpdateGameView(buffer.Current!);
                     btnPlayVisibility = true;
                     btnPauseVisibility = false;
                     break;
@@ -367,7 +395,7 @@
         {
             DialogService.ShowInfo($"Cannot move back. We only store a limited number of previous generations of the game.");
         }
-        //UpdateGameView(buffer.Current!);
+        UpdateGameView(buffer.Current!);
     }
     private async Task btnNext_Click(MouseEventArgs e)
     {
@@ -377,7 +405,7 @@
         { 
             DialogService.ShowInfo("Game Over. We no longer have any ants.");
         }
-        //UpdateGameView(buffer.Current!);
+        UpdateGameView(buffer.Current!);
     }
     private void btnEditAnt_Click(MouseEventArgs e)
     {
@@ -408,21 +436,42 @@
     {
         //ImageSource source;
         //source = GameImageRenderer.GetGenerationImageSourceX2(gameState);
+        GameImageRenderer.GetGenerationImageSourceX2(JSRuntime, canvasElement, gameState);
         //imgGame.Source = source;
 
-        generationN = gameState.GenerationN.ToString();
+        generationN = "Step #" + gameState.GenerationN.ToString();
     }
 
-    private async void Draw()
-    {
-        await JSRuntime.InvokeVoidAsync("LangtonsAnt.drawCanvas", canvasElement);
-    }
+    // private async void Draw()
+    // {
+    //     await JSRuntime.InvokeVoidAsync("LangtonsAnt.drawCanvas", canvasElement);
+    // }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await JSRuntime.InvokeVoidAsync("LangtonsAnt.initializeCanvas", canvasElement);
+
+            buffer = CreateGameBuffer(null, nGenerations, rule);
+
+            // FRANK: SKIPPING THE TIMER STUFF FOR NOW DOING MANUAL ONLY
+
+            // gameTimer = new DispatcherTimer();
+            // gameTimer.Interval = TimeSpan.FromMilliseconds(1000 / imagesPerSecond);
+            // gameTimer.Tick += (sender, args) =>
+            // {
+            //     if (buffer.MoveNext(generationsPerStep))
+            //         UpdateGameView(buffer.Current!);
+            //     else
+            //     {
+            //         MessageBox.Show("Game Over. We no longer have any ants.");
+            //         PlayUIState = PlayUIMode.Stopped;
+            //     }
+            // };
+            currentRule = rule;
+            Rule = rule;
+            PlayUIState = PlayUIMode.Stopped;
         }
     }
 
