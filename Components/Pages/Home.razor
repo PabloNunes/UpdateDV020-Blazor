@@ -12,6 +12,7 @@
 
 
 <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="2">
+
     <FluentButton Appearance="Appearance.Accent" @onclick="btnPlay_Click" IconStart="@(new Icons.Filled.Size20.Play())" Disabled="true" hidden="@(!btnPlayVisibility)">Play</FluentButton>
     <FluentButton Appearance="Appearance.Accent" @onclick="btnPause_Click" IconStart="@(new Icons.Filled.Size20.Pause())" Disabled="true" hidden="@(!btnPauseVisibility)">Pause</FluentButton>
     <FluentButton Appearance="Appearance.Accent" @onclick="btnStop_Click" IconStart="@(new Icons.Filled.Size20.Stop())" Disabled="true">Stop</FluentButton>
@@ -35,10 +36,11 @@
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
     <FluentTextField Value="@generationN" ReadOnly="true"></FluentTextField>
-
 </FluentStack>
 
 <p></p>
+<script src="mainPage.js"></script>
+
 
 <canvas id="anthill" width="500" height="500" @ref="canvasElement"></canvas>
 
@@ -83,6 +85,8 @@
 </script>
 
 
+<canvas width="2000" height="750" @ref="canvasElement"></canvas>
+
 @code {
 
     GameBuffer buffer;
@@ -102,6 +106,8 @@
 
 
     private ElementReference canvasElement;
+    private bool isClickEventEnabled = false;
+    private string statusMessage = "Status: Ready";
 
     //protected override async Task OnInitializedAsync()
     // protected override  void OnInitialized()
@@ -476,5 +482,4 @@
     }
 
     #endregion
-
 }
