@@ -27,7 +27,7 @@
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
     <FluentLabel Typo="Typography.H5">Rules:</FluentLabel>
-    <FluentTextField Value="@currentRule"></FluentTextField>
+    <FluentTextField Placeholder="@currentRule" @bind-Value="@currentRule"></FluentTextField>
     <FluentButton Appearance="Appearance.Accent" @onclick="btnEditRuleStart_Click" IconStart="@(new Icons.Filled.Size20.Edit())">Edit</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
