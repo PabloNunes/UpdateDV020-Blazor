@@ -71,6 +71,8 @@ namespace LangtonsAnt
 
             // Update the previous game state
             previousGameState = g.Clone();
+
+
         }
 
         private static async Task Draw4in2XScaled(IJSRuntime js, ElementReference canvas, int i, int j,

@@ -14,7 +14,7 @@ namespace LangtonsAntBlazorFluent.Components.Pages
         PlayUIMode playUiState;
         EditUIMode editUiState;
 
-        string rule = "LR";
+        string rule = "LRL";
         const int imagesPerSecond = 25;
         const int nGenerations = 100;
         const int generationsPerStep = 1;
@@ -27,6 +27,7 @@ namespace LangtonsAntBlazorFluent.Components.Pages
 
         private ElementReference canvasElement;
         private bool isClickEventEnabled = false;
+        private bool isLoading = true;
         private string statusMessage = "Status: Ready";
 
         //protected override async Task OnInitializedAsync()
@@ -68,7 +69,7 @@ namespace LangtonsAntBlazorFluent.Components.Pages
         {
             IGame newGame = null;
             //newGame = new Game(128, null);
-            newGame = new Game(24, null);
+            newGame = new Game(64, null);
             newGame.Ants = new List<IAnt>(new IAnt[] {
                             new GeneralizedAnt(
                                 i: newGame.Size / 2 + 1,
@@ -344,6 +345,15 @@ namespace LangtonsAntBlazorFluent.Components.Pages
         private void btnEditRuleStart_Click(MouseEventArgs e)
         {
             EditUIState = EditUIMode.EditingRule;
+            try
+            {
+                Rule = currentRule;
+            }
+            catch (Exception ex)
+            {
+                statusMessage = ex.Message;
+            }
+
         }
         private async Task btnSave_Click(MouseEventArgs e)
         {
@@ -362,10 +372,21 @@ namespace LangtonsAntBlazorFluent.Components.Pages
         {
             //ImageSource source;
             //source = GameImageRenderer.GetGenerationImageSourceX2(gameState);
-            GameImageRenderer.GetGenerationImageSourceX2(JSRuntime, canvasElement, gameState);
+            Task task = GameImageRenderer.GetGenerationImageSourceX2(JSRuntime, canvasElement, gameState);
+
             //imgGame.Source = source;
 
             generationN = "Ant Generation #" + gameState.GenerationN.ToString();
+
+            if (isLoading)
+            {
+                task.ContinueWith(async task =>
+                {
+                    isLoading = false;
+                    await InvokeAsync(StateHasChanged);
+
+                });
+            }
         }
 
         // private async void Draw()
@@ -398,6 +419,7 @@ namespace LangtonsAntBlazorFluent.Components.Pages
                 currentRule = rule;
                 Rule = rule;
                 PlayUIState = PlayUIMode.Stopped;
+
             }
         }
 
