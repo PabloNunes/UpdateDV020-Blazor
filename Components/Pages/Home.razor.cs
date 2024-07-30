@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Text.RegularExpressions;
 using UI;
+using Json;
 
 namespace LangtonsAntBlazorFluent.Components.Pages
 {
@@ -24,11 +25,12 @@ namespace LangtonsAntBlazorFluent.Components.Pages
         private bool btnPlayVisibility = true;
         private bool btnPauseVisibility = true;
 
-
         private ElementReference canvasElement;
         private bool isClickEventEnabled = false;
         private bool isLoading = true;
         private string statusMessage = "Status: Ready";
+
+        private ElementReference fileInput;
 
         //protected override async Task OnInitializedAsync()
         // protected override  void OnInitialized()
@@ -357,8 +359,17 @@ namespace LangtonsAntBlazorFluent.Components.Pages
         }
         private async Task btnSave_Click(MouseEventArgs e)
         {
-            DialogService.ShowInfo("One Day we will save.");
+            try
+            {
+                var json = GameJSONSerializer.ToJson(buffer.Current!);
+                await JSRuntime.InvokeVoidAsync("LangtonsAnt.saveFile", "gameState.json", json);
+            }
+            catch (Exception)
+            {
+                DialogService.ShowError("Buffer Error!");
+            }
         }
+
         private async Task btnLoad_Click(MouseEventArgs e)
         {
             DialogService.ShowInfo("One Day we will Load.");
