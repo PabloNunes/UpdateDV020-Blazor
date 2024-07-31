@@ -32,7 +32,15 @@
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
     <FluentButton Appearance="Appearance.Accent" @onclick="btnSave_Click" IconStart="@(new Icons.Filled.Size20.Save())">Save</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnLoad_Click" IconStart="@(new Icons.Filled.Size20.Folder())">Load</FluentButton>
+    <FluentInputFile @ref="fileInput"
+                     DragDropZoneVisible="false"
+                     Mode="InputFileMode.SaveToTemporaryFolder"
+                     Multiple="false"
+                     AnchorId="LoadButton"
+                     Accept=".json"
+                     OnCompleted="@JsonUploaded" />
+    <FluentButton Appearance="Appearance.Accent" Id="LoadButton" IconStart="@(new Icons.Filled.Size20.Folder())">Load</FluentButton>
+
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
     <FluentTextField Value="@generationN" ReadOnly="true"></FluentTextField>

@@ -5,6 +5,9 @@ using Microsoft.JSInterop;
 using System.Text.RegularExpressions;
 using UI;
 using Json;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.FluentUI.AspNetCore.Components;
+using System.Text.Json;
 
 namespace LangtonsAntBlazorFluent.Components.Pages
 {
@@ -30,7 +33,7 @@ namespace LangtonsAntBlazorFluent.Components.Pages
         private bool isLoading = true;
         private string statusMessage = "Status: Ready";
 
-        private ElementReference fileInput;
+        FluentInputFile? fileInput = default!;
 
         //protected override async Task OnInitializedAsync()
         // protected override  void OnInitialized()
@@ -297,6 +300,24 @@ namespace LangtonsAntBlazorFluent.Components.Pages
             get { return (rule?.Length ?? 0) - 1; }
         }
 
+        private void JsonUploaded(IEnumerable<FluentInputFileEventArgs> files)
+        {
+            var json = files.First();
+            try
+            {
+                var jsonFileContent = File.ReadAllText(json.LocalFile?.FullName);
+                var gameState = GameJSONSerializer.FromJson(jsonFileContent);
+                buffer.currentNode.Value = gameState;
+                UpdateGameView(buffer.Current!);
+            }
+            catch (Exception ex)
+            {
+                DialogService.ShowError(ex.Message);
+            }
+
+            json.LocalFile?.Delete();
+        }
+
         #endregion
 
         #region Event Handlers
@@ -372,7 +393,13 @@ namespace LangtonsAntBlazorFluent.Components.Pages
 
         private async Task btnLoad_Click(MouseEventArgs e)
         {
-            DialogService.ShowInfo("One Day we will Load.");
+            DialogService.ShowError("Implementing Loading!");
+        }
+
+        public async Task FileUploaded(InputFileChangeEventArgs e)
+        {
+            var browserFile = e.File;
+            DialogService.ShowInfo("InputFileChangeEventArgs e");
         }
 
         #endregion
