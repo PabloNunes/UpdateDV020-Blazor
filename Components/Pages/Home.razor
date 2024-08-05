@@ -13,9 +13,9 @@
 
 <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="2">
 
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnPlay_Click" IconStart="@(new Icons.Filled.Size20.Play())" Disabled="true" hidden="@(!btnPlayVisibility)">Play</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnPause_Click" IconStart="@(new Icons.Filled.Size20.Pause())" Disabled="true" hidden="@(!btnPauseVisibility)">Pause</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnStop_Click" IconStart="@(new Icons.Filled.Size20.Stop())" Disabled="true">Stop</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnPlay_Click" IconStart="@(new Icons.Filled.Size20.Play())" Disabled="false" hidden="@(!btnPlayVisibility)">Play</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnPause_Click" IconStart="@(new Icons.Filled.Size20.Pause())" Disabled="false" hidden="@(!btnPauseVisibility)">Pause</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnStop_Click" IconStart="@(new Icons.Filled.Size20.Stop())">Stop</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
     <FluentButton Appearance="Appearance.Accent" @onclick="btnPrev_Click" IconStart="@(new Icons.Filled.Size20.ArrowLeft())">Prev.</FluentButton>
@@ -58,7 +58,7 @@
             </FluentStack>
         </div>
     }
-    <canvas id="anthill" width="1000" height="1000" @ref="canvasElement"></canvas>
+    <canvas id="anthill" width="2000" height="2000" @ref="canvasElement"></canvas>
 </div>
 
 
@@ -85,8 +85,8 @@
 
     .centered-stack {
         display: flex;
-        justify-content: center; /* Centraliza horizontalmente */
-        align-items: center; /* Centraliza verticalmente */
+        justify-content: center;
+        align-items: center; 
     }
 
     .loading-overlay fluent-progress-ring {

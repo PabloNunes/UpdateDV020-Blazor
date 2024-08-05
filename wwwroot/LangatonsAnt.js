@@ -5,13 +5,6 @@
         ctx.fillStyle = '#Ece7d7';
         ctx.fillRect(10, 10, 500, 500);
     },
-    drawCanvas: function (canvas) {
-        let ctx = canvas.getContext('2d');
-        ctx.beginPath();
-        ctx.arc(Math.floor(Math.random() * (500 + 1)), Math.floor(Math.random() * (500 + 1)), 50, 0, Math.PI * 2, true); // Circle
-        ctx.fillStyle = 'red';
-        ctx.fill();
-    },
     saveFile: function (filename, content) {
         const blob = new Blob([content], { type: 'application/json' });
         const link = document.createElement('a');

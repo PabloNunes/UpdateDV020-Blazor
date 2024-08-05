@@ -19,7 +19,7 @@ namespace LangtonsAntBlazorFluent.Components.Pages
         EditUIMode editUiState;
 
         string rule = "LRL";
-        const int imagesPerSecond = 25;
+        const int imagesPerSecond = 10;
         const int nGenerations = 100;
         const int generationsPerStep = 1;
 
@@ -96,19 +96,39 @@ namespace LangtonsAntBlazorFluent.Components.Pages
                 switch (value)
                 {
                     case PlayUIMode.Playing:
-                        // gameTimer.Start();
+
+                        // Starting the timer and updating the game state depending on the speed
+                        gameTimer = new Timer(_ =>
+                        {
+                            if (buffer.MoveNext(generationsPerStep))
+                                UpdateGameView(buffer.Current!);
+                            else
+                            {
+                                DialogService.ShowInfo("Game Over. We no longer have any ants.");
+                                PlayUIState = PlayUIMode.Stopped;
+                            }
+                        }, null, 0, 1000 / imagesPerSecond);
+
+
                         btnPlayVisibility = false;
                         btnPauseVisibility = true;
                         break;
                     case PlayUIMode.Paused:
-                        // gameTimer.Stop();
+                        gameTimer?.Dispose();
+
+
                         btnPauseVisibility = false;
                         btnPlayVisibility = true;
                         break;
                     case PlayUIMode.Stopped:
                         // gameTimer.Stop();
+
+                        // Creating a new game state 
                         buffer = CreateGameBuffer(null, nGenerations, rule);
                         UpdateGameView(buffer.Current!);
+
+                        //Resetting the UI
+                        generationN = "Ant Generation #0";
                         btnPlayVisibility = true;
                         btnPauseVisibility = false;
                         break;
@@ -300,23 +320,7 @@ namespace LangtonsAntBlazorFluent.Components.Pages
             get { return (rule?.Length ?? 0) - 1; }
         }
 
-        private void JsonUploaded(IEnumerable<FluentInputFileEventArgs> files)
-        {
-            var json = files.First();
-            try
-            {
-                var jsonFileContent = File.ReadAllText(json.LocalFile?.FullName);
-                var gameState = GameJSONSerializer.FromJson(jsonFileContent);
-                buffer.currentNode.Value = gameState;
-                UpdateGameView(buffer.Current!);
-            }
-            catch (Exception ex)
-            {
-                DialogService.ShowError(ex.Message);
-            }
 
-            json.LocalFile?.Delete();
-        }
 
         #endregion
 
@@ -391,17 +395,23 @@ namespace LangtonsAntBlazorFluent.Components.Pages
             }
         }
 
-        private async Task btnLoad_Click(MouseEventArgs e)
+        private void JsonUploaded(IEnumerable<FluentInputFileEventArgs> files)
         {
-            DialogService.ShowError("Implementing Loading!");
-        }
+            var json = files.First();
+            try
+            {
+                var jsonFileContent = File.ReadAllText(json.LocalFile?.FullName);
+                var gameState = GameJSONSerializer.FromJson(jsonFileContent);
+                buffer.currentNode.Value = gameState;
+                UpdateGameView(buffer.Current!);
+            }
+            catch (Exception ex)
+            {
+                DialogService.ShowError(ex.Message);
+            }
 
-        public async Task FileUploaded(InputFileChangeEventArgs e)
-        {
-            var browserFile = e.File;
-            DialogService.ShowInfo("InputFileChangeEventArgs e");
+            json.LocalFile?.Delete();
         }
-
         #endregion
 
         #region JS - UI
@@ -437,23 +447,7 @@ namespace LangtonsAntBlazorFluent.Components.Pages
             if (firstRender)
             {
                 await JSRuntime.InvokeVoidAsync("LangtonsAnt.initializeCanvas", canvasElement);
-
                 buffer = CreateGameBuffer(null, nGenerations, rule);
-
-                // FRANK: SKIPPING THE TIMER STUFF FOR NOW DOING MANUAL ONLY
-
-                // gameTimer = new DispatcherTimer();
-                // gameTimer.Interval = TimeSpan.FromMilliseconds(1000 / imagesPerSecond);
-                // gameTimer.Tick += (sender, args) =>
-                // {
-                //     if (buffer.MoveNext(generationsPerStep))
-                //         UpdateGameView(buffer.Current!);
-                //     else
-                //     {
-                //         MessageBox.Show("Game Over. We no longer have any ants.");
-                //         PlayUIState = PlayUIMode.Stopped;
-                //     }
-                // };
                 currentRule = rule;
                 Rule = rule;
                 PlayUIState = PlayUIMode.Stopped;
