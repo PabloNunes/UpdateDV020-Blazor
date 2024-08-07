@@ -1,10 +1,5 @@
 ﻿window.LangtonsAnt = {
-    initializeCanvas: function (canvas) {
-        let ctx = canvas.getContext('2d');
-        ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#Ece7d7';
-        ctx.fillRect(10, 10, 500, 500);
-    },
+    initializeCanvas: function (canvas) {},
     saveFile: function (filename, content) {
         const blob = new Blob([content], { type: 'application/json' });
         const link = document.createElement('a');
@@ -19,12 +14,30 @@
         ctx.clearRect(10, 10, canvas.width, canvas.height);
     },
 
+    handleCanvasClick: function (canvas) {
+        canvas.addEventListener('click', function (event) {
+            let rect = canvas.getBoundingClientRect();
+            let x = event.clientX - rect.left;
+            let y = event.clientY - rect.top;
+
+            let cubeSize = 20;
+            let posX = Math.floor(x / cubeSize);
+            let posY = Math.floor(y / cubeSize);
+
+            DotNet.invokeMethodAsync('LangtonsAntBlazorFluent', 'HandleCanvasClick', posX, posY);
+        });
+    },
+
+    removeClickEventListener: function (canvas) {
+        if (canvas.clickHandler) {
+            canvas.removeEventListener('click', canvas.clickHandler);
+            canvas.clickHandler = null;
+        }
+    },
+
     drawPixel: function (canvas, posX, posY, width, height, color) {
         let ctx = canvas.getContext('2d');
         let cubeSize = 20;
-
-        // just to debug
-        //ctx.globalAlpha = 0.25
 
         posX = posX * cubeSize;
         posY = posY * cubeSize;

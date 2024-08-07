@@ -22,16 +22,22 @@
     <FluentButton Appearance="Appearance.Accent" @onclick="btnNext_Click" IconStart="@(new Icons.Filled.Size20.ArrowRight())">Next</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditAnt_Click" IconStart="@(new Icons.Filled.Size20.Bug())">Ant</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditCellColor_Click" IconStart="@(new Icons.Filled.Size20.Color())">Cell Color</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditAnt_Click" IconStart="@(new Icons.Filled.Size20.Bug())" hidden="@(!btnEditAntVisibility)">Edit Ant</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnCancelEditAnt_Click" IconStart="@(new Icons.Filled.Size20.Bug())" hidden="@(btnEditAntVisibility)">Exit Edit Ant</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditCellColor_Click" IconStart="@(new Icons.Filled.Size20.Color())" hidden="@(!btnEditCellVisibility)">Edit Cell Color</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnCancelEditCellColor_Click" IconStart="@(new Icons.Filled.Size20.Color())" hidden="@(btnEditCellVisibility)">Exit Edit Cell Color</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
-    <FluentLabel Typo="Typography.H5">Rules:</FluentLabel>
-    <FluentTextField Placeholder="@currentRule" @bind-Value="@currentRule"></FluentTextField>
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditRuleStart_Click" IconStart="@(new Icons.Filled.Size20.Edit())">Edit</FluentButton>
+    <FluentLabel Typo="Typography.H5" hidden="@(!btnEditRulesVisibility)">Current Rule:@currentRule</FluentLabel>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditRuleStart_Click" IconStart="@(new Icons.Filled.Size20.Pen())" hidden="@(!btnEditRulesVisibility)">Edit Rules</FluentButton>
+    
+    <FluentLabel Typo="Typography.H5" hidden="@(btnEditRulesVisibility)">Rules:</FluentLabel>
+    <FluentTextField Placeholder="@currentRule" @bind-Value="@currentRule" hidden="@(btnEditRulesVisibility)"></FluentTextField>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnSaveRuleStart_Click" IconStart="@(new Icons.Filled.Size20.Save())" hidden="@(btnEditRulesVisibility)">Save Rule Update</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditRuleCancel_Click" IconStart="@(new Icons.Filled.Size20.ErrorCircle())" hidden="@(btnEditRulesVisibility)">Cancel Rule Update</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnSave_Click" IconStart="@(new Icons.Filled.Size20.Save())">Save</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnSave_Click" IconStart="@(new Icons.Filled.Size20.Save())">Save Game</FluentButton>
     <FluentInputFile @ref="fileInput"
                      DragDropZoneVisible="false"
                      Mode="InputFileMode.SaveToTemporaryFolder"
@@ -39,7 +45,7 @@
                      AnchorId="LoadButton"
                      Accept=".json"
                      OnCompleted="@JsonUploaded" />
-    <FluentButton Appearance="Appearance.Accent" Id="LoadButton" IconStart="@(new Icons.Filled.Size20.Folder())">Load</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" Id="LoadButton" IconStart="@(new Icons.Filled.Size20.Folder())">Load Game</FluentButton>
 
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
@@ -58,7 +64,7 @@
             </FluentStack>
         </div>
     }
-    <canvas id="anthill" width="2000" height="2000" @ref="canvasElement"></canvas>
+    <canvas id="anthill" width="1280" height="1280" @ref="canvasElement"></canvas>
 </div>
 
 
