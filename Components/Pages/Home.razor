@@ -6,6 +6,8 @@
 @inject IDialogService DialogService
 @inject IJSRuntime JSRuntime
 
+
+
 <PageTitle>Ants</PageTitle>
 
 <h1>Ants</h1>
@@ -13,23 +15,24 @@
 
 <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="2">
 
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnPlay_Click" IconStart="@(new Icons.Filled.Size20.Play())" Disabled="false" hidden="@(!btnPlayVisibility)">Play</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnPause_Click" IconStart="@(new Icons.Filled.Size20.Pause())" Disabled="false" hidden="@(!btnPauseVisibility)">Pause</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnStop_Click" IconStart="@(new Icons.Filled.Size20.Stop())">Stop</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnPlay_Click" IconStart="@(new Icons.Filled.Size20.Play())" Disabled="@(!btnPlayEnabled)" hidden="@(!btnPlayVisibility)">Play</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnPause_Click" IconStart="@(new Icons.Filled.Size20.Pause())" Disabled="@(!btnPauseEnabled)" hidden="@(!btnPauseVisibility)">Pause</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnStop_Click" IconStart="@(new Icons.Filled.Size20.Stop())" Disabled="@(!btnStopEnabled)">Stop</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnPrev_Click" IconStart="@(new Icons.Filled.Size20.ArrowLeft())">Prev.</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnNext_Click" IconStart="@(new Icons.Filled.Size20.ArrowRight())">Next</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnPrev_Click" IconStart="@(new Icons.Filled.Size20.ArrowLeft())" Disabled="@(!btnPrevEnabled)">Prev.</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnNext_Click" IconStart="@(new Icons.Filled.Size20.ArrowRight())" Disabled="@(!btnNextEnabled)">Next</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditAnt_Click" IconStart="@(new Icons.Filled.Size20.Bug())" hidden="@(!btnEditAntVisibility)">Edit Ant</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditAnt_Click" IconStart="@(new Icons.Filled.Size20.Bug())" Disabled="@(!btnAntsEditEnabled)" hidden="@(!btnEditAntVisibility)">Edit Ant</FluentButton>
     <FluentButton Appearance="Appearance.Accent" @onclick="btnCancelEditAnt_Click" IconStart="@(new Icons.Filled.Size20.Bug())" hidden="@(btnEditAntVisibility)">Exit Edit Ant</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditCellColor_Click" IconStart="@(new Icons.Filled.Size20.Color())" hidden="@(!btnEditCellVisibility)">Edit Cell Color</FluentButton>
+
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditCellColor_Click" IconStart="@(new Icons.Filled.Size20.Color())" Disabled="@(!btnCellEditEnabled)" hidden="@(!btnEditCellVisibility)">Edit Cell Color</FluentButton>
     <FluentButton Appearance="Appearance.Accent" @onclick="btnCancelEditCellColor_Click" IconStart="@(new Icons.Filled.Size20.Color())" hidden="@(btnEditCellVisibility)">Exit Edit Cell Color</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
     <FluentLabel Typo="Typography.H5" hidden="@(!btnEditRulesVisibility)">Current Rule:@currentRule</FluentLabel>
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditRuleStart_Click" IconStart="@(new Icons.Filled.Size20.Pen())" hidden="@(!btnEditRulesVisibility)">Edit Rules</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditRuleStart_Click" IconStart="@(new Icons.Filled.Size20.Pen())" Disabled="@(!btnRulesEditEnabled)" hidden="@(!btnEditRulesVisibility)">Edit Rules</FluentButton>
     
     <FluentLabel Typo="Typography.H5" hidden="@(btnEditRulesVisibility)">Rules:</FluentLabel>
     <FluentTextField Placeholder="@currentRule" @bind-Value="@currentRule" hidden="@(btnEditRulesVisibility)"></FluentTextField>
@@ -37,7 +40,7 @@
     <FluentButton Appearance="Appearance.Accent" @onclick="btnEditRuleCancel_Click" IconStart="@(new Icons.Filled.Size20.ErrorCircle())" hidden="@(btnEditRulesVisibility)">Cancel Rule Update</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
-    <FluentButton Appearance="Appearance.Accent" @onclick="btnSave_Click" IconStart="@(new Icons.Filled.Size20.Save())">Save Game</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnSave_Click" IconStart="@(new Icons.Filled.Size20.Save())" Disabled="@(!btnSaveEnabled)">Save Game</FluentButton>
     <FluentInputFile @ref="fileInput"
                      DragDropZoneVisible="false"
                      Mode="InputFileMode.SaveToTemporaryFolder"
@@ -45,7 +48,7 @@
                      AnchorId="LoadButton"
                      Accept=".json"
                      OnCompleted="@JsonUploaded" />
-    <FluentButton Appearance="Appearance.Accent" Id="LoadButton" IconStart="@(new Icons.Filled.Size20.Folder())">Load Game</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" Id="LoadButton" IconStart="@(new Icons.Filled.Size20.Folder())" Disabled="@(!btnLoadEnabled)">Load Game</FluentButton>
 
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
@@ -69,36 +72,3 @@
 
 
 <script src="LangatonsAnt.js"></script>
-
-<style>
-    .loading-container {
-        position: relative;
-    }
-
-    .loading-overlay {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 10;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(255, 255, 255, 0.8);
-    }
-
-    .centered-stack {
-        position: absolute;
-        left: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center; 
-    }
-
-    .loading-overlay fluent-progress-ring {
-        width: 100px;
-        height: 100px;
-    }
-</style>

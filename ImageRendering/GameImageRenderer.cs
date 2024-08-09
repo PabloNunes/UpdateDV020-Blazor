@@ -17,6 +17,8 @@ namespace LangtonsAnt
             int width = g.Size * 2;
             int height = g.Size * 2;
             var tasks = new List<Task>();
+            var headColor = ToHex(Color.Red);
+            var tailColor = ToHex(Color.Blue);
 
             // Not clear canvas if it is the first time
             if (previousGameState == null)
@@ -42,8 +44,6 @@ namespace LangtonsAnt
                         IAnt? ant = g.Ants.FirstOrDefault(a => (i == a.I) && (j == a.J));
                         if (ant != null)
                         {
-                            var headColor = ToHex(Color.Red);
-                            var tailColor = ToHex(Color.Blue);
                             switch (ant.Direction)
                             {
                                 case AntDirection.Up:

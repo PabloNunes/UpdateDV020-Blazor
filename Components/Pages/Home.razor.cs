@@ -13,11 +13,13 @@ namespace LangtonsAntBlazorFluent.Components.Pages
 {
     public partial class Home
     {
+        // Game states and UI states
         private GameBuffer? buffer;
         private Timer? gameTimer;
         PlayUIMode playUiState;
         EditUIMode editUiState;
 
+        // Default values
         string rule = "LRL";
         const int imagesPerSecond = 5;
         const int nGenerations = 10;
@@ -25,20 +27,35 @@ namespace LangtonsAntBlazorFluent.Components.Pages
 
         private string currentRule = string.Empty;
         private string generationN = "Ant Generation #0";
+
+        // Buttons visibility for different UI states
         private bool btnPlayVisibility = true;
         private bool btnPauseVisibility = true;
-
-        private bool btnEditing = false;
         private bool btnEditRulesVisibility = true;
         private bool btnEditAntVisibility = true;
         private bool btnEditCellVisibility = true;
 
+        // Buttons enabled/disabled
+        private bool btnPlayEnabled = true;
+        private bool btnPauseEnabled = true;
+        private bool btnStopEnabled = true;
+        private bool btnRulesEditEnabled = true;
+        private bool btnAntsEditEnabled = true;
+        private bool btnCellEditEnabled = true;
+        private bool btnPrevEnabled = true;
+        private bool btnNextEnabled = true;
+        private bool btnSaveEnabled = true;
+        private bool btnLoadEnabled = true;
+
+        // Loading screen and canvas
         private ElementReference canvasElement;
-        private bool isClickEventEnabled = false;
         private bool isLoading = true;
         private string statusMessage = "Status: Ready";
 
+        // File input for loading game state
         FluentInputFile? fileInput = default!;
+
+        // Reference to the current component for JSInterop
         DotNetObjectReference<Home> homeReference => DotNetObjectReference.Create(this);
 
         private GameBuffer CreateGameBuffer(IGame? initialState = null, int nGenerations = 100, string initialRule = "LR")
@@ -53,8 +70,7 @@ namespace LangtonsAntBlazorFluent.Components.Pages
         private IGame CreateGame(string initialRule = "LR")
         {
             IGame newGame = null;
-            //newGame = new Game(128, null);
-            newGame = new Game(32, null);
+            newGame = new Game(64, null);
             newGame.Ants = new List<IAnt>(new IAnt[] {
                             new GeneralizedAnt(
                                 i: newGame.Size / 2 + 1,
@@ -87,11 +103,15 @@ namespace LangtonsAntBlazorFluent.Components.Pages
                                 DialogService.ShowInfo("Game Over. We no longer have any ants.");
                                 PlayUIState = PlayUIMode.Stopped;
                             }
+                            // Forcing the Generations field to be synchronous
+                            InvokeAsync(StateHasChanged);
                         }, null, 0, 1000 / imagesPerSecond);
 
                         // Updating the UI
                         btnPlayVisibility = false;
                         btnPauseVisibility = true;
+
+                        SetButtonsNonPlayMode(false);
                         break;
                     case PlayUIMode.Paused:
                         // Killing the timer
@@ -100,6 +120,8 @@ namespace LangtonsAntBlazorFluent.Components.Pages
                         // Updating the UI
                         btnPauseVisibility = false;
                         btnPlayVisibility = true;
+
+                        SetButtonsNonPlayMode(true);
                         break;
                     case PlayUIMode.Stopped:
                         // Killing the timer
@@ -113,6 +135,8 @@ namespace LangtonsAntBlazorFluent.Components.Pages
                         generationN = "Ant Generation #0";
                         btnPlayVisibility = true;
                         btnPauseVisibility = false;
+
+                        SetButtonsNonPlayMode(true);
                         break;
                     default:
                         break;
@@ -134,19 +158,24 @@ namespace LangtonsAntBlazorFluent.Components.Pages
                     case EditUIMode.EditingColors:
                         PlayUIState = PlayUIMode.Paused;
                         btnEditCellVisibility = false;
-                        // SetColorsEditMode(true);
+                        SetColorsEditMode(true);
                         break;
                     case EditUIMode.EditingAnt:
                         PlayUIState = PlayUIMode.Paused;
                         btnEditAntVisibility = false;
-                        // SetAntEditMode(true);
+                        SetAntEditMode(true);
                         break;
                     case EditUIMode.EditingRule:
                         PlayUIState = PlayUIMode.Paused;
                         btnEditRulesVisibility = false;
-                        // SetRuleEditMode(true);
+                        SetRuleEditMode(true);
                         break;
                     case EditUIMode.NotEditing:
+                    default:
+                        SetRuleEditMode(false);
+                        SetAntEditMode(false);
+                        SetColorsEditMode(false);
+
                         PlayUIState = PlayUIMode.Paused;
                         btnEditRulesVisibility = true;
                         btnEditAntVisibility = true;
@@ -156,19 +185,39 @@ namespace LangtonsAntBlazorFluent.Components.Pages
                             buffer.FlushBuffer();
                         }
                         break;
-                    default:
-                        // SetRuleEditMode(false);
-                        // SetAntEditMode(false);
-                        // SetColorsEditMode(false);
-
-                        if (editUiState != EditUIMode.NotEditing)
-                        {
-                            buffer.FlushBuffer();
-                        }
-                        break;
                 }
                 editUiState = value;
             }
+        }
+
+        /// <summary>
+        /// Enable or disable buttons not related to editing
+        /// </summary>
+        /// <param name="value">Enable buttons</param>
+        void SetButtonsNonEditMode(bool value)
+        {
+            btnPlayEnabled = value;
+            btnPauseEnabled = value;
+            btnStopEnabled = value;
+            btnPrevEnabled = value;
+            btnNextEnabled = value;
+            btnSaveEnabled = value;
+            btnLoadEnabled = value;
+        }
+
+        /// <summary>
+        /// Enable or disable buttons not related to playing
+        /// </summary>
+        /// <param name="value">Enable buttons</param>
+        void SetButtonsNonPlayMode(bool value)
+        {
+            btnRulesEditEnabled = value;
+            btnAntsEditEnabled = value;
+            btnCellEditEnabled = value;
+            btnNextEnabled = value;
+            btnPrevEnabled = value;
+            btnSaveEnabled = value;
+            btnLoadEnabled = value;
         }
 
 
@@ -183,45 +232,15 @@ namespace LangtonsAntBlazorFluent.Components.Pages
 
             if (value)
             {
-                // pnlRuleText.Visibility = false;
-                // btnEditRuleStart.Visibility = false;
-                // txtEditRule.Visibility = true;
-                // btnEditRuleApply.Visibility = true;
-                // btnEditRuleCancel.Visibility = true;
+                btnAntsEditEnabled = false;
+                btnCellEditEnabled = false;
+                
             }
             else
             {
-                // pnlRuleText.Visibility = true;
-                // btnEditRuleStart.Visibility = true;
-                // txtEditRule.Visibility = false;
-                // btnEditRuleApply.Visibility = false;
-                // btnEditRuleCancel.Visibility = false;
+                btnAntsEditEnabled = true;
+                btnCellEditEnabled = true;
             }
-        }
-
-        /// <summary>
-        /// Enable or disable buttons not related to editing
-        /// </summary>
-        /// <param name="value">Enable buttons</param>
-        void SetButtonsNonEditMode(bool value)
-        {
-            // Play - Stop - Pause
-            // btnPlay.IsEnabled = value;
-            // btnStop.IsEnabled = value;
-            // btnPause.IsEnabled = value;
-
-            // Previous and next buttons
-            // btnStepBackward.IsEnabled = value;
-            // btnStepForward.IsEnabled = value;
-
-            // Edit ants and colors
-            // btnEditAnt.IsEnabled = value;
-            // btnEditCellColor.IsEnabled = value;
-            // btnEditRuleStart.IsEnabled = value;
-
-            // Save and load
-            // btnSave.IsEnabled = value;
-            // btnLoad.IsEnabled = value;
         }
 
         /// <summary>
@@ -230,8 +249,21 @@ namespace LangtonsAntBlazorFluent.Components.Pages
         /// <param name="value">is on</param>
         void SetAntEditMode(bool value)
         {
-            SetButtonsAntOrColorsEditMode(value);
-            // lblEditingAnts.Visibility = value ? true : false;
+
+            // Disable everything else
+            SetButtonsNonEditMode(!value);
+
+            if (value)
+            {
+                btnRulesEditEnabled = false;
+                btnCellEditEnabled = false;
+
+            }
+            else
+            {
+                btnRulesEditEnabled = true;
+                btnCellEditEnabled = true;
+            }
         }
 
         /// <summary>
@@ -240,29 +272,19 @@ namespace LangtonsAntBlazorFluent.Components.Pages
         /// <param name="value">is on</param>
         void SetColorsEditMode(bool value)
         {
-            SetButtonsAntOrColorsEditMode(value);
-            // lblEditingColors.Visibility = value ? true : false;
-        }
-
-        /// <summary>
-        /// Switch UI into Ant or cell colors edit mode
-        /// </summary>
-        /// <param name="value">is on</param>
-        void SetButtonsAntOrColorsEditMode(bool value)
-        {
+            // Disable everything else
             SetButtonsNonEditMode(!value);
 
             if (value)
             {
-                // btnEditAnt.Visibility = false;
-                // btnEditCellColor.Visibility = false;
-                // btnBackToGame.Visibility = true;
+                btnRulesEditEnabled = false;
+                btnAntsEditEnabled = false;
+
             }
             else
             {
-                // btnEditAnt.Visibility = true;
-                // btnEditCellColor.Visibility = true;
-                // btnBackToGame.Visibility = false;
+                btnRulesEditEnabled = true;
+                btnAntsEditEnabled = true;
             }
         }
 
@@ -473,11 +495,7 @@ namespace LangtonsAntBlazorFluent.Components.Pages
 
         private void UpdateGameView(IGame gameState, bool refreshPage)
         {
-            //ImageSource source;
-            //source = GameImageRenderer.GetGenerationImageSourceX2(gameState);
             Task task = GameImageRenderer.GetGenerationImageSourceX2(JSRuntime, canvasElement, gameState, refreshPage);
-
-            //imgGame.Source = source;
 
             generationN = $"Ant Generation #{gameState.GenerationN}";
 
@@ -490,17 +508,8 @@ namespace LangtonsAntBlazorFluent.Components.Pages
                     await InvokeAsync(StateHasChanged);
 
                 });
-            } else
-            {
-                // Forcing the Generations field to be synchronous
-                InvokeAsync(StateHasChanged);
             }
         }
-
-        // private async void Draw()
-        // {
-        //     await JSRuntime.InvokeVoidAsync("LangtonsAnt.drawCanvas", canvasElement);
-        // }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
