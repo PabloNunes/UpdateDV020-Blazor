@@ -11,11 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
-	  <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.*-* " />
-    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.*-* " />
+    <_ContentIncludedByDefault Remove="wwwroot\Home.css" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\js\" />
+	  <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.*-* " />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.*-* " />
   </ItemGroup>
 </Project>

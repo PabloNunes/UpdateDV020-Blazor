@@ -1,6 +1,12 @@
 ﻿@page "/"
+@using LangtonsAnt
+@using System.Text.RegularExpressions
+@using UI
 @rendermode InteractiveServer
+@inject IDialogService DialogService
 @inject IJSRuntime JSRuntime
+
+
 
 <PageTitle>Ants</PageTitle>
 
@@ -8,65 +14,61 @@
 
 
 <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="2">
-    <FluentButton Appearance="Appearance.Accent" @onclick="DrawGrid">Play</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="NullFunction">Pause</FluentButton>
+
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnPlay_Click" IconStart="@(new Icons.Filled.Size20.Play())" Disabled="@(!btnPlayEnabled)" hidden="@(!btnPlayVisibility)">Play</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnPause_Click" IconStart="@(new Icons.Filled.Size20.Pause())" Disabled="@(!btnPauseEnabled)" hidden="@(!btnPauseVisibility)">Pause</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnStop_Click" IconStart="@(new Icons.Filled.Size20.Stop())" Disabled="@(!btnStopEnabled)">Stop</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
-    <FluentButton Appearance="Appearance.Accent" @onclick="ToggleClickEvent">Edit Ant</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="ToggleClickEvent">Edit Cell Color</FluentButton>
-    <FluentButton Appearance="Appearance.Accent" @onclick="NullFunction">Remove Ant</FluentButton>
+
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnPrev_Click" IconStart="@(new Icons.Filled.Size20.ArrowLeft())" Disabled="@(!btnPrevEnabled)">Prev.</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnNext_Click" IconStart="@(new Icons.Filled.Size20.ArrowRight())" Disabled="@(!btnNextEnabled)">Next</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
-    <FluentTextField Placeholder="Placeholder"></FluentTextField>
-    <FluentButton Appearance="Appearance.Accent" @onclick="NullFunction">Update Movement</FluentButton>
+
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditAnt_Click" IconStart="@(new Icons.Filled.Size20.Bug())" Disabled="@(!btnAntsEditEnabled)" hidden="@(!btnEditAntVisibility)">Edit Ant</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnCancelEditAnt_Click" IconStart="@(new Icons.Filled.Size20.Bug())" hidden="@(btnEditAntVisibility)">Exit Edit Ant</FluentButton>
+
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditCellColor_Click" IconStart="@(new Icons.Filled.Size20.Color())" Disabled="@(!btnCellEditEnabled)" hidden="@(!btnEditCellVisibility)">Edit Cell Color</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnCancelEditCellColor_Click" IconStart="@(new Icons.Filled.Size20.Color())" hidden="@(btnEditCellVisibility)">Exit Edit Cell Color</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
-    <FluentLabel Typo="Typography.H3">Iterations: @statusMessage</FluentLabel>
+
+    <FluentLabel Typo="Typography.H5" hidden="@(!btnEditRulesVisibility)">Current Rule:@currentRule</FluentLabel>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditRuleStart_Click" IconStart="@(new Icons.Filled.Size20.Pen())" Disabled="@(!btnRulesEditEnabled)" hidden="@(!btnEditRulesVisibility)">Edit Rules</FluentButton>
+    
+    <FluentLabel Typo="Typography.H5" hidden="@(btnEditRulesVisibility)">Rules:</FluentLabel>
+    <FluentTextField Placeholder="@currentRule" @bind-Value="@currentRule" hidden="@(btnEditRulesVisibility)"></FluentTextField>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnSaveRuleStart_Click" IconStart="@(new Icons.Filled.Size20.Save())" hidden="@(btnEditRulesVisibility)">Save Rule Update</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnEditRuleCancel_Click" IconStart="@(new Icons.Filled.Size20.ErrorCircle())" hidden="@(btnEditRulesVisibility)">Cancel Rule Update</FluentButton>
+    <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
+
+    <FluentButton Appearance="Appearance.Accent" @onclick="btnSave_Click" IconStart="@(new Icons.Filled.Size20.Save())" Disabled="@(!btnSaveEnabled)">Save Game</FluentButton>
+    <FluentInputFile @ref="fileInput"
+                     DragDropZoneVisible="false"
+                     Mode="InputFileMode.SaveToTemporaryFolder"
+                     Multiple="false"
+                     AnchorId="LoadButton"
+                     Accept=".json"
+                     OnCompleted="@JsonUploaded" />
+    <FluentButton Appearance="Appearance.Accent" Id="LoadButton" IconStart="@(new Icons.Filled.Size20.Folder())" Disabled="@(!btnLoadEnabled)">Load Game</FluentButton>
+
+    <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
+
+    <FluentTextField Value="@generationN" ReadOnly="true"></FluentTextField>
 </FluentStack>
 
 <p></p>
-<script src="mainPage.js"></script>
 
-
-<canvas width="2000" height="750" @ref="canvasElement"></canvas>
-
-@code {
-    private ElementReference canvasElement;
-    private bool isClickEventEnabled = false;
-    private string statusMessage = "Status: Ready";
-
-    private async void NullFunction(){}
-
-    private async void DrawGrid()
+<div class="loading-container" style="position: relative;">
+    @if (isLoading)
     {
-        int rows = 200; 
-        int cols = 75; 
-        int cellSize = 10;
-        await JSRuntime.InvokeVoidAsync("mainPage.drawGrid", canvasElement, rows, cols, cellSize);
-        await JSRuntime.InvokeVoidAsync("mainPage.addClickEventListener", canvasElement, cellSize);
+        <div class="loading-overlay">
+            <FluentStack class="centered-stack" Orientation="Orientation.Vertical">
+				<FluentProgressRing></FluentProgressRing>
+				<FluentLabel Typo="Typography.H4">LOADING</FluentLabel>
+            </FluentStack>
+        </div>
     }
+    <canvas id="anthill" width="1280" height="1280" @ref="canvasElement"></canvas>
+</div>
 
-    private async void ToggleClickEvent()
-    {
-        int cellSize = 10;
-        if (isClickEventEnabled)
-        {
-            await JSRuntime.InvokeVoidAsync("mainPage.removeClickEventListener", canvasElement);
-        }
-        else
-        {
-            await JSRuntime.InvokeVoidAsync("mainPage.addClickEventListener", canvasElement, cellSize);
-        }
-        isClickEventEnabled = !isClickEventEnabled;
-    }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await JSRuntime.InvokeVoidAsync("mainPage.initializeCanvas", canvasElement);
-        }
-    }
-
-    private void UpdateStatusMessage()
-    {
-        statusMessage = $"Status: Click";
-    }
-}
+<script src="LangatonsAnt.js"></script>
