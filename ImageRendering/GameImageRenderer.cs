@@ -12,7 +12,7 @@ namespace LangtonsAnt
     {
         private static IGame? previousGameState;
 
-        public static async Task GetGenerationImageSourceX2(IJSRuntime js, ElementReference canvas, IGame g)
+        public static async Task GetGenerationImageSourceX2(IJSRuntime js, ElementReference canvas, IGame g, bool refreshPage)
         {
             int width = g.Size * 2;
             int height = g.Size * 2;
@@ -29,10 +29,13 @@ namespace LangtonsAnt
                 for (int j = 0; j < g.Size; j++)
                 {
                     // Checking if the pixel needs to be redrawn
-                    // The pixel needs to be redrawn if it is the first time or if the pixel has changed, comparing the current game state with the previous one
-                    bool needsRedraw = previousGameState == null || previousGameState.Field[i, j] != g.Field[i, j] ||
-                                       previousGameState.Ants.Any(a => a.I == i && a.J == j) != g.Ants.Any(a => a.I == i && a.J == j);
-                    
+                    // The pixel needs to be redrawn if it is the first time or if the pixel has changed (Being this a color, ant and ant direction).
+                    // Comparing the current game state with the previous one
+                     bool needsRedraw = previousGameState == null || previousGameState.Field[i, j] != g.Field[i, j] ||
+                       previousGameState.Ants.Any(a => a.I == i && a.J == j) != g.Ants.Any(a => a.I == i && a.J == j) ||
+                       previousGameState.Ants.Any(a => a.I == i && a.J == j && a.Direction != g.Ants.FirstOrDefault(ga => ga.I == i && ga.J == j)?.Direction) ||
+                       refreshPage;
+
                     // Redraw the pixel if needed
                     if (needsRedraw)
                     {

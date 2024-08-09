@@ -1,4 +1,9 @@
 ﻿window.LangtonsAnt = {
+
+    BlazorReference: null,
+    ReferenceCache: function (componentReference) {
+        LangtonsAnt.BlazorReference = componentReference;
+    },
     initializeCanvas: function (canvas) {},
     saveFile: function (filename, content) {
         const blob = new Blob([content], { type: 'application/json' });
@@ -15,7 +20,7 @@
     },
 
     handleCanvasClick: function (canvas) {
-        canvas.addEventListener('click', function (event) {
+        canvas.clickHandler = function (event) {
             let rect = canvas.getBoundingClientRect();
             let x = event.clientX - rect.left;
             let y = event.clientY - rect.top;
@@ -24,15 +29,14 @@
             let posX = Math.floor(x / cubeSize);
             let posY = Math.floor(y / cubeSize);
 
-            DotNet.invokeMethodAsync('LangtonsAntBlazorFluent', 'HandleCanvasClick', posX, posY);
-        });
+            LangtonsAnt.BlazorReference.invokeMethodAsync('HandleCanvasClick', posX, posY);
+        };
+        canvas.addEventListener('click', canvas.clickHandler);
     },
 
     removeClickEventListener: function (canvas) {
-        if (canvas.clickHandler) {
-            canvas.removeEventListener('click', canvas.clickHandler);
-            canvas.clickHandler = null;
-        }
+        canvas.removeEventListener('click', canvas.clickHandler);
+        canvas.clickHandler = null;
     },
 
     drawPixel: function (canvas, posX, posY, width, height, color) {
