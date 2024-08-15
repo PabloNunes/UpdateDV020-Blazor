@@ -316,6 +316,25 @@ namespace LangtonsAntBlazorFluent.Components.Pages
             }
         }
 
+        /// <summary>
+        /// If all the ants have the same rule, return the rule string, else return null
+        /// </summary>
+        /// <param name="ants">GeneralizedAnt list</param>
+        /// <returns></returns>
+        private string? CalculateCommonRule(IList<IAnt> ants)
+        {
+            string? commonRule = null;
+            foreach (IAnt a in ants)
+            {
+                string rule = ((GeneralizedAnt)a).Rule;
+                if (commonRule == null)
+                    commonRule = rule;
+                else if (rule != commonRule)
+                    return null;
+            }
+            return commonRule;
+        }
+
         private bool IsRuleValid(string proposedRule)
         {
             return Regex.IsMatch(proposedRule, "^[L|R]{2,14}$");
@@ -407,7 +426,15 @@ namespace LangtonsAntBlazorFluent.Components.Pages
 
             try
             {
-                Rule = currentRule;
+                if (IsRuleValid(currentRule)) { 
+                    Rule = currentRule;
+                }
+                else
+                {
+                    DialogService.ShowError("Rules can only have the R or the L characters!");
+                    currentRule = Rule;
+                    throw new InvalidOperationException("Invalid rule");
+                }
             }
             catch (Exception ex)
             {
@@ -428,7 +455,15 @@ namespace LangtonsAntBlazorFluent.Components.Pages
             try
             {
                 var json = GameJSONSerializer.ToJson(buffer.Current!);
-                await JSRuntime.InvokeVoidAsync("LangtonsAnt.saveFile", "gameState.json", json);
+
+                try
+                {
+                    await JSRuntime.InvokeVoidAsync("LangtonsAnt.saveFileDialog", "gameState.json", json);
+                }
+                catch (TaskCanceledException)
+                {
+                    DialogService.ShowError("File save was canceled.");
+                }
             }
             catch (Exception)
             {
@@ -444,7 +479,18 @@ namespace LangtonsAntBlazorFluent.Components.Pages
                 var jsonFileContent = File.ReadAllText(json.LocalFile?.FullName);
                 var gameState = GameJSONSerializer.FromJson(jsonFileContent);
                 buffer.currentNode.Value = gameState;
+
+                string? commonRule = CalculateCommonRule(buffer.Current.Ants);
+
+                if (commonRule != null)
+                {
+                    Rule = commonRule;
+                }
+
+                currentRule = Rule;
                 UpdateGameView(buffer.Current!, false);
+                EditUIState = EditUIMode.NotEditing;
+
             }
             catch (Exception ex)
             {

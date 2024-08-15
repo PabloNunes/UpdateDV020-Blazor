@@ -4,16 +4,30 @@
     ReferenceCache: function (componentReference) {
         LangtonsAnt.BlazorReference = componentReference;
     },
-    initializeCanvas: function (canvas) {},
-    saveFile: function (filename, content) {
-        const blob = new Blob([content], { type: 'application/json' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    initializeCanvas: function (canvas) { },
+    saveFileDialog: async function (filename, json) {
+        try {
+            const opts = {
+                suggestedName: filename,
+                types: [{
+                    description: 'JSON Files',
+                    accept: { 'application/json': ['.json'] }
+                }]
+            };
+
+            const handle = await window.showSaveFilePicker(opts);
+            const writable = await handle.createWritable();
+            const blob = new Blob([json], { type: 'application/json' });
+
+            // Will have a wait for the data to be written and to be closed.
+            await writable.write(blob);
+            await writable.close()
+        } catch (err) {
+            console.error('Error during file save dialog:', err);
+            return null;
+        }
     },
+    
     clearCanvas: function (canvas) {
         let ctx = canvas.getContext('2d');
         ctx.clearRect(10, 10, canvas.width, canvas.height);
