@@ -8,6 +8,7 @@ using Json;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.FluentUI.AspNetCore.Components;
 using System.Text.Json;
+using UI.ImageRendering;
 
 namespace LangtonsAntBlazorFluent.Components.Pages
 {
@@ -51,6 +52,7 @@ namespace LangtonsAntBlazorFluent.Components.Pages
         private ElementReference canvasElement;
         private bool isLoading = true;
         private string statusMessage = "Status: Ready";
+        private List<ColoredSquare> coloredSquares = new List<ColoredSquare>();
 
         // File input for loading game state
         FluentInputFile? fileInput = default!;
@@ -335,27 +337,51 @@ namespace LangtonsAntBlazorFluent.Components.Pages
             return commonRule;
         }
 
-        private bool IsRuleValid(string proposedRule)
+        private static bool IsRuleValid(string proposedRule)
         {
             return Regex.IsMatch(proposedRule, "^[L|R]{2,14}$");
         }
 
         private void SetRuleText(string rule)
         {
-            // List<TextBlock> tbs = CreateColoredRuleControls(rule);
-            // pnlRuleText.Children.Clear();
-            // foreach (TextBlock tb in tbs)
-            // {
-            //     pnlRuleText.Children.Add(tb);
-            // }
+            var coloredSquares = CreateColoredRuleSquares(rule);
+            UpdateRuleTextUI(coloredSquares);
         }
+
+        private List<ColoredSquare> CreateColoredRuleSquares(string rule)
+        {
+            var coloredSquares = new List<ColoredSquare>();
+
+            int i = 0;
+
+            foreach (char c in rule)
+            {
+                var colorBytes = ColorBytes.ColorSequence[i].ToArray().Reverse(); // Getting the color and converting from BGR to RGB using Reverse
+                var color = BitConverter.ToString(colorBytes.ToArray()).Replace("-", string.Empty); // Convert byte[] to hex string
+                coloredSquares.Add(new ColoredSquare { Color = color, Character = c });
+                i++;
+            }
+
+            return coloredSquares;
+        }
+
+        private void UpdateRuleTextUI(List<ColoredSquare> coloredSquares)
+        {
+            this.coloredSquares = coloredSquares;
+            StateHasChanged();
+        }
+
+        private class ColoredSquare
+        {
+            public string Color { get; set; }
+            public char Character { get; set; }
+        }
+
 
         public int MaxColor
         {
             get { return (rule?.Length ?? 0) - 1; }
         }
-
-
 
         #endregion
 

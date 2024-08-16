@@ -31,11 +31,21 @@
     <FluentButton Appearance="Appearance.Accent" @onclick="btnCancelEditCellColor_Click" IconStart="@(new Icons.Filled.Size20.Color())" hidden="@(btnEditCellVisibility)">Exit Edit Cell Color</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
 
-    <FluentLabel Typo="Typography.H5" hidden="@(!btnEditRulesVisibility)">Current Rule:@currentRule</FluentLabel>
+
+    <FluentLabel Typo="Typography.H5" hidden="@(!btnEditRulesVisibility)">Current Rule:</FluentLabel>
+    <div hidden="@(!btnEditRulesVisibility)">
+        @foreach (var square in coloredSquares)
+        {
+            <div style="width: 20px; height: 20px; background-color:#@square.Color; display: inline-block; margin: 2px; text-align: center; line-height: 20px;">
+                <span style="color: gray;">@square.Character</span>
+            </div>
+        }
+    </div>
+
     <FluentButton Appearance="Appearance.Accent" @onclick="btnEditRuleStart_Click" IconStart="@(new Icons.Filled.Size20.Pen())" Disabled="@(!btnRulesEditEnabled)" hidden="@(!btnEditRulesVisibility)">Edit Rules</FluentButton>
-    
     <FluentLabel Typo="Typography.H5" hidden="@(btnEditRulesVisibility)">Rules:</FluentLabel>
     <FluentTextField Placeholder="@currentRule" @bind-Value="@currentRule" hidden="@(btnEditRulesVisibility)"></FluentTextField>
+
     <FluentButton Appearance="Appearance.Accent" @onclick="btnSaveRuleStart_Click" IconStart="@(new Icons.Filled.Size20.Save())" hidden="@(btnEditRulesVisibility)">Save Rule Update</FluentButton>
     <FluentButton Appearance="Appearance.Accent" @onclick="btnEditRuleCancel_Click" IconStart="@(new Icons.Filled.Size20.ErrorCircle())" hidden="@(btnEditRulesVisibility)">Cancel Rule Update</FluentButton>
     <FluentDivider Orientation="Orientation.Vertical" Role="DividerRole.Presentation" Style=" width: 0.5%;"></FluentDivider>
